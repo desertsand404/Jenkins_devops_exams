@@ -1,0 +1,7 @@
+namespace: prod
+environment: prod
+
+movieService:
+  replicas: 3
+castService:
+  replicas: 3

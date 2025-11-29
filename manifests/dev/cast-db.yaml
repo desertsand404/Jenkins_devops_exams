@@ -1,0 +1,61 @@
+# PersistentVolumeClaim for Cast DB
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cast-db-pvc
+  namespace: dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# StatefulSet for Cast DB
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cast-db
+  namespace: dev
+spec:
+  serviceName: cast-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cast-db
+  template:
+    metadata:
+      labels:
+        app: cast-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:12.1-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: cast-db-secret
+          volumeMounts:
+            - name: cast-db-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: cast-db-storage
+          persistentVolumeClaim:
+            claimName: cast-db-pvc
+
+---
+# Service for Movie DB to expose and allow connections inside the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: cast-db
+  namespace: dev
+spec:
+  selector:
+    app: cast-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cast-service
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cast-service
+  template:
+    metadata:
+      labels:
+        app: cast-service
+    spec:
+      containers:
+        - name: cast-service
+          image: robertsecon/cast-service:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URI
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@cast-db:5432/$(POSTGRES_DB)"
+
+---
+# Service to expose cast Service within the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: cast-service
+  namespace: dev
+spec:
+  selector:
+    app: cast-service
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP

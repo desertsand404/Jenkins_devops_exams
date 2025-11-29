@@ -1,0 +1,61 @@
+# PersistentVolumeClaim for Movie DB
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: movie-db-pvc
+  namespace: staging
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# StatefulSet for Movie DB
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: movie-db
+  namespace: staging
+spec:
+  serviceName: movie-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: movie-db
+  template:
+    metadata:
+      labels:
+        app: movie-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:12.1-alpine
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: movie-db-secret
+          volumeMounts:
+            - name: movie-db-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: movie-db-storage
+          persistentVolumeClaim:
+            claimName: movie-db-pvc
+
+---
+# Service for Movie DB to expose and allow connections inside the cluster
+apiVersion: v1
+kind: Service
+metadata:
+  name: movie-db
+  namespace: staging
+spec:
+  selector:
+    app: movie-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None

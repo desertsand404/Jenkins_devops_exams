@@ -1,0 +1,36 @@
+# Environment-specific values for the microservices Helm chart
+namespace: dev
+environment: dev
+
+# Docker images
+dockerHub:
+  username: robertsecon
+
+movieService:
+  image: robertsecon/movie-service
+  tag: latest
+  replicas: 1
+  port: 8000
+
+castService:
+  image: robertsecon/cast-service
+  tag: latest
+  replicas: 1
+  port: 8000
+
+# Database configurations
+movieDb:
+  image: postgres:12.1-alpine
+  storage: 10Gi
+  credentials:
+    user: movie_db_username
+    password: movie_db_password
+    database: movie_db_dev
+
+castDb:
+  image: postgres:12.1-alpine
+  storage: 10Gi
+  credentials:
+    user: cast_db_username
+    password: cast_db_password
+    database: cast_db_dev
